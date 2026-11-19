@@ -1,0 +1,6 @@
+#!/bin/bash
+# vfinx-notify TITLE BODY REPORT - pop-up with an "Open report" button (waits up to 4 h for the click).
+# Started by vfinx-trend --notify in its own systemd unit, so the report job itself ends immediately.
+act=$(timeout 4h notify-send -a "VFINX trend" -i x-office-spreadsheet -A open="Open report" --wait "$1" "$2")
+[ "$act" = open ] && setsid xdg-open "$3" >/dev/null 2>&1 &
+exit 0

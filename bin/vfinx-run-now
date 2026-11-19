@@ -1,0 +1,10 @@
+#!/bin/bash
+# vfinx-run-now - make today's VFINX trend report now (desktop icon "VFINX Report - Run Now").
+# Runs the same systemd unit as nightly mode, so it can't run twice at once and a closed terminal can't kill it.
+if systemctl --user is-active --quiet vfinx-report.service; then
+    notify-send -a "VFINX trend" "VFINX report" "Already running - the pop-up will appear when it is done."
+    exit 0
+fi
+systemctl --user daemon-reload
+notify-send -a "VFINX trend" -i x-office-spreadsheet "VFINX report" "Downloading prices and fitting the trends..."
+systemctl --user start --no-block vfinx-report.service

@@ -1,0 +1,31 @@
+#!/bin/bash
+# vfinx-mode - switch the VFINX trend report between manual (Run Now icon only) and nightly automatic runs.
+# Usage: vfinx-mode manual | nightly | status
+set -u
+MODE_FILE="$HOME/.config/vfinx-trend/run-mode"
+mkdir -p "$(dirname "$MODE_FILE")"
+case "${1:-}" in
+    manual)
+        systemctl --user disable --now vfinx-report.timer
+        echo manual > "$MODE_FILE"
+        notify-send -a "VFINX trend" -i media-playback-pause "VFINX report: MANUAL mode" "It runs only when you double-click VFINX Report - Run Now."
+        ;;
+    nightly)
+        systemctl --user daemon-reload
+        systemctl --user enable --now vfinx-report.timer
+        echo nightly > "$MODE_FILE"
+        next=$(systemctl --user show vfinx-report.timer -p NextElapseUSecRealtime --value)
+        notify-send -a "VFINX trend" -i appointment-soon "VFINX report: NIGHTLY mode" "Runs automatically Mon-Fri at 06:35. Next: ${next:-?}"
+        ;;
+    status)
+        echo "Mode: $(cat "$MODE_FILE" 2>/dev/null || echo 'not set (manual)')"
+        echo "Timer: $(systemctl --user is-enabled vfinx-report.timer 2>/dev/null)"
+        systemctl --user list-timers vfinx-report.timer --no-pager | sed -n 1,2p
+        echo "Last run: $(journalctl --user -u vfinx-report.service -o short-iso --no-pager 2>/dev/null | grep -E 'Finished|Failed' | tail -1 | cut -c1-19)"
+        ls -1t "$HOME/VFINX-Reports"/*.html 2>/dev/null | grep -v latest | head -1 | sed 's/^/Newest report: /'
+        ;;
+    *)
+        echo "Usage: vfinx-mode manual | nightly | status" >&2
+        exit 1
+        ;;
+esac

@@ -1,0 +1,12 @@
+[Unit]
+Description=VFINX vs trend report (1m-40y) -> ~/VFINX-Reports
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/.local/bin/vfinx-trend --notify
+TimeoutStartSec=10min
+Nice=10
+MemoryMax=300M

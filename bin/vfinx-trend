@@ -1,0 +1,253 @@
+#!/usr/bin/env python3
+"""vfinx-trend - is VFINX (Vanguard 500 Index Fund) above or below its trend today, and what NAV is "on trend" next?
+
+Downloads VFINX's full daily history since 1980 (Yahoo Finance, with dividend-adjusted prices), keeps it in
+~/VFINX-Reports/data/vfinx-daily.csv (used when a download fails), fits an exponential trend (straight line through
+log prices) to the last 1m/3m/6m/1y/5y/10y/20y/30y/40y of dividend-adjusted closes, and reports per window the gap to
+trend and the NAV the next trading day needs to be exactly on trend. Standard library only.
+
+  vfinx-trend [--json FILE] [--out DIR] [--now YYYY-MM-DDTHH:MM] [--notify]
+
+Made from gold-trend; data module vfinx_data.py drafted by a local Gemma E2B, fixed by Claude.
+"""
+import argparse
+import csv
+import datetime
+import html
+import json
+import math
+import os
+import shutil
+import subprocess
+import sys
+import time
+import urllib.request
+from zoneinfo import ZoneInfo
+
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+import vfinx_data as vd  # noqa: E402
+
+NY = ZoneInfo('America/New_York')
+CLOSE_HOUR = vd.CLOSE_HOUR  # a fund's NAV is published after the 16:00 close, usually by 18:00 New York time
+SOURCE = ('Yahoo Finance, Vanguard 500 Index Fund Investor Shares VFINX (daily NAV since 1980); trends are fitted to '
+          'dividend-adjusted prices (dividends reinvested), shown in today\'s NAV dollars')
+URL = ('https://query1.finance.yahoo.com/v8/finance/chart/VFINX?period1=0&period2={now}&interval=1d'
+       '&events=div%2Csplit&includeAdjustedClose=true')
+USER_AGENT = 'vfinx-trend/0.1 (personal research script)'
+WINDOWS = [('1 month', 30), ('3 months', 91), ('6 months', 182), ('1 year', 365),
+           ('5 years', 1826), ('10 years', 3652), ('20 years', 7305),
+           ('30 years', 10957), ('40 years', 14610)]
+DISCLAIMER = 'Trend lines are fitted to past prices; they are not a forecast and not financial advice.'
+
+
+DataError = vd.DataError
+
+
+# --- Load and clean -------------------------------------------------------------------------------------------
+def fetch_json():
+    url = URL.format(now=int(time.time()))
+    last = None
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': USER_AGENT})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return json.load(r)
+        except Exception as e:          # network, HTTP or JSON error - retry, then give up
+            last = e
+            time.sleep(5 * (attempt + 1))
+    raise DataError(f'download failed: {last}')
+
+
+def check_rows(rows, now_ny):
+    """rows from vfinx_data (download or saved CSV): refuse too little or stale data."""
+    if len(rows) < 250:
+        raise DataError(f'only {len(rows)} daily prices - refusing to report from so little data')
+    if rows[-1][0] < now_ny.date() - datetime.timedelta(days=7):
+        raise DataError(f'newest price is from {rows[-1][0]} - data is stale')
+
+
+def next_trading_day(d):
+    n = d + datetime.timedelta(days=1)
+    while n.weekday() >= 5:
+        n += datetime.timedelta(days=1)
+    return n
+
+
+# --- Calculate ------------------------------------------------------------------------------------------------
+def fit_window(bars, last_date, last_price, days, next_day):
+    cutoff = last_date - datetime.timedelta(days=days)
+    win = [(d, p) for d, p in bars if d > cutoff]
+    d0 = win[0][0]
+    xs = [(d - d0).days for d, _ in win]
+    ys = [math.log(p) for _, p in win]
+    n = len(win)
+    mx, my = sum(xs) / n, sum(ys) / n
+    sxx = sum((x - mx) ** 2 for x in xs)
+    b = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sxx
+    a = my - b * mx
+    ss_tot = sum((y - my) ** 2 for y in ys)
+    ss_res = sum((y - (a + b * x)) ** 2 for x, y in zip(xs, ys))
+    trend_today = math.exp(a + b * (last_date - d0).days)
+    return {
+        'trend_today': trend_today,
+        'gap_pct': (last_price / trend_today - 1) * 100,
+        'on_trend_next': math.exp(a + b * (next_day - d0).days),
+        'growth_pct': (math.exp(b * 365.25) - 1) * 100,
+        'r2': 1 - ss_res / ss_tot if ss_tot else 1.0,
+        'bars': n,
+        # history must reach back (almost) the whole window - a week of slack for holidays/weekends
+        'short': (d0 - cutoff).days > 7,
+    }
+
+
+# --- Report ---------------------------------------------------------------------------------------------------
+def money(v):
+    return f'${v:,.2f}'
+
+
+def visual_html(rows):
+    """Dots line + centre-line gap bars (plain divs). Written by gpt-oss-20b, wired in by Claude."""
+    total = len(rows)
+    below = sum(1 for r in rows if r['gap_pct'] < 0)
+    # dots line
+    dots = ''.join('<span class="dot below">●</span>' if r['gap_pct'] < 0 else '<span class="dot above">○</span>' for r in rows)
+    style = '''\n<style>\n.visual {font-size:1rem;overflow-x:auto;margin:8px 0 16px;}\n.visual .dots {margin-bottom:0.5em;}\n.visual .dots .dot {margin-right:2px;font-size:1.5em;}\n.visual .dots .below {color:var(--down);}\n.visual .dots .above {color:var(--up);}\n.visual .bar-row {display:flex;align-items:center;margin:4px 0;}\n.visual .bar-row .label {width:90px;flex-shrink:0;font-weight:600;}\n.visual .bar-area {width:300px;height:14px;display:flex;position:relative;flex-shrink:0;}\n.visual .bar-area::before{content:"";position:absolute;left:50%;top:0;width:1px;background:var(--muted);height:100%;} \n.visual .bar-area .left {flex:0 0 150px;display:flex;justify-content:flex-end;border-right:2px solid var(--fg);}\n.visual .bar-area .right {flex:0 0 150px;display:flex;justify-content:flex-start;}\n.visual .bar-area .bar {height:100%;} \n.visual .bar-area .bar.red {background:var(--down);} \n.visual .bar-area .bar.green {background:var(--up);} \n.visual .gap {margin-left:8px;width:4.5em;text-align:right;}\n.visual .scale {display:flex;margin-left:90px;width:302px;font-size:0.8em;color:var(--muted);}\n.visual .scale span {flex:1;}\n.visual .scale span + span {text-align:right;} \n.visual .weak {margin-left:8px;color:var(--muted);font-size:0.8em;}\n</style>'''
+    bar_lines = []
+    for r in rows:
+        win = html.escape(r['window'])
+        gap_pct = r['gap_pct']
+        r2 = r['r2']
+        width = min(abs(gap_pct),20)/20*150
+        left_style = f'width:{width:.1f}px' if gap_pct < 0 else 'width:0px'
+        right_style = f'width:{width:.1f}px' if gap_pct >= 0 else 'width:0px'
+        weak = r2 < 0.5
+        weak_span = '<small class="weak">(weak trend)</small>' if weak else ''
+        line = (f'<div class="bar-row" style="opacity:{0.4 if weak else 1}"><span class="label">{win}</span>'
+                f'<div class="bar-area"><div class="left"><div class="bar red" style="{left_style}"></div></div>'
+                f'<div class="right"><div class="bar green" style="{right_style}"></div></div></div>'
+                f'<span class="gap">{gap_pct:+.2f}%</span>{weak_span}</div>')
+        bar_lines.append(line)
+    bars_html = '<div class="bars">' + ''.join(bar_lines) + '<div class="scale"><span>&#9664; cheaper than trend</span><span>pricier than trend &#9654;</span></div></div>'
+    return style + '<div class="visual"><div class="dots">' + dots + f' Below trend on {below} of {total}</div>' + bars_html + '</div>'
+
+
+def build_reports(rows, last_date, last_price, next_day, made, note=''):
+    below = [r for r in rows if r['gap_pct'] < 0]
+    above = [r for r in rows if r['gap_pct'] >= 0]
+    def names(rs):
+        return f' ({", ".join(r["window"] for r in rs)})' if rs else ''
+    summary = (f'VFINX closed at {money(last_price)} on {last_date:%a %b %d, %Y}: '
+               f'ABOVE trend on {len(above)} of {len(rows)} windows{names(above)}, BELOW on {len(below)}{names(below)}.')
+    md = [f'# VFINX vs trend - {last_date:%Y-%m-%d}', '',
+          f'**{summary}**', ''] + ([f'_Warning: {note}_', ''] if note else []) + [
+          f'Next trading day: {next_day:%a %b %d, %Y}. Source: {SOURCE}. Made {made:%Y-%m-%d %H:%M %Z}.', '',
+          f'| Window | Trend today | Gap % | Above/Below | On-trend price for {next_day:%b %d} | Trend growth %/yr | R² | Bars |',
+          '|---|---:|---:|---|---:|---:|---:|---:|']
+    for r in rows:
+        md.append(f'| {r["window"]}{" (short history)" if r["short"] else ""} | {money(r["trend_today"])} | '
+                  f'{r["gap_pct"]:+.2f}% | {"BELOW" if r["gap_pct"] < 0 else "ABOVE"} | {money(r["on_trend_next"])} | '
+                  f'{r["growth_pct"]:+.2f}% | {r["r2"]:.2f} | {r["bars"]:,} |')
+    md += ['', 'How to read it: "On-trend price" is where the trend line for that window is on the next trading day. '
+           'A NAV under it is BELOW that trend (cheaper than the trend), over it is ABOVE. '
+           'R² near 1 = prices hugged the line; near 0 = no clear trend, so that row means little.', '', DISCLAIMER, '']
+
+    trs = []
+    for r in rows:
+        cls = 'below' if r['gap_pct'] < 0 else 'above'
+        trs.append(f'<tr><td>{html.escape(r["window"])}{" <small>(short history)</small>" if r["short"] else ""}</td>'
+                   f'<td>{money(r["trend_today"])}</td><td class="{cls}">{r["gap_pct"]:+.2f}%</td>'
+                   f'<td class="{cls}"><b>{cls.upper()}</b></td><td><b>{money(r["on_trend_next"])}</b></td>'
+                   f'<td>{r["growth_pct"]:+.2f}%</td><td>{r["r2"]:.2f}</td><td>{r["bars"]:,}</td></tr>')
+    page = f'''<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>VFINX vs trend {last_date}</title>
+<style>
+:root {{ --bg:#fff; --fg:#1d1d1f; --muted:#666; --line:#ddd; --head:#f4f4f4; --up:#0a7a32; --down:#c0262d; }}
+@media (prefers-color-scheme: dark) {{ :root {{ --bg:#16171a; --fg:#e8e8ea; --muted:#9a9aa0; --line:#33343a;
+  --head:#22232a; --up:#4cc274; --down:#ff6b6b; }} }}
+body {{ background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; margin:0 auto; max-width:1000px; padding:16px; }}
+.summary {{ font-size:1.15em; font-weight:600; }} .muted, small {{ color:var(--muted); }}
+.wrap {{ overflow-x:auto; }} table {{ border-collapse:collapse; width:100%; margin:12px 0; }}
+th, td {{ border-bottom:1px solid var(--line); padding:6px 10px; text-align:right; white-space:nowrap; }}
+th {{ background:var(--head); }} th:first-child, td:first-child, td:nth-child(4) {{ text-align:left; }}
+.above {{ color:var(--up); }} .below {{ color:var(--down); }} .warn {{ color:var(--down); font-weight:600; }}
+</style></head><body>
+<h1>VFINX vs trend - {last_date:%Y-%m-%d}</h1>
+<p class="summary">{html.escape(summary)}</p>
+{f'<p class="warn">Warning: {html.escape(note)}</p>' if note else ''}
+{visual_html(rows)}
+<p class="muted">Next trading day: {next_day:%a %b %d, %Y}. Source: {html.escape(SOURCE)}. Made {made:%Y-%m-%d %H:%M %Z}.</p>
+<div class="wrap"><table><thead><tr><th>Window</th><th>Trend today</th><th>Gap</th><th>Above/Below</th>
+<th>On-trend price for {next_day:%b %d}</th><th>Trend growth/yr</th><th>R²</th><th>Bars</th></tr></thead>
+<tbody>{"".join(trs)}</tbody></table></div>
+<p class="muted">How to read it: "On-trend price" is where the trend line for that window is on the next trading day.
+A NAV under it is BELOW that trend (cheaper than the trend), over it is ABOVE. R² near 1 = prices hugged the line;
+near 0 = no clear trend, so that row means little.</p>
+<p><i>{DISCLAIMER}</i></p></body></html>
+'''
+    return '\n'.join(md), page, summary
+
+
+def notify(title, body, report=None, urgent=False):
+    """Desktop pop-up. With a report, it offers 'Open report' and waits for the click in its own unit."""
+    if not shutil.which('notify-send'):
+        return
+    if report and shutil.which('systemd-run') and shutil.which('vfinx-notify'):
+        subprocess.run(['systemd-run', '--user', '--collect', '--quiet', 'vfinx-notify', title, body, report])
+    else:
+        subprocess.run(['notify-send', '-a', 'VFINX trend'] + (['-u', 'critical'] if urgent else [])
+                       + ['-i', 'x-office-spreadsheet', title, body])
+
+
+def main():
+    ap = argparse.ArgumentParser(description='VFINX vs its 1m-40y trends')
+    ap.add_argument('--json', help='read Yahoo chart JSON from this file instead of downloading')
+    ap.add_argument('--out', default=os.path.expanduser('~/VFINX-Reports'), help='report folder (default ~/VFINX-Reports)')
+    ap.add_argument('--now', help='pretend the New York time is YYYY-MM-DDTHH:MM (testing)')
+    ap.add_argument('--notify', action='store_true', help='show a desktop notification when done')
+    args = ap.parse_args()
+    out = os.path.expanduser(args.out)
+    try:
+        now = (datetime.datetime.strptime(args.now, '%Y-%m-%dT%H:%M').replace(tzinfo=NY) if args.now
+               else datetime.datetime.now(NY))
+        csv_path = os.path.join(out, 'data', 'vfinx-daily.csv')
+        note, fresh = '', True
+        if args.json:
+            with open(args.json) as f:
+                data = json.load(f)
+        else:
+            try:
+                data = fetch_json()
+            except DataError as e:
+                data, fresh = None, False
+                note = f'{e}; this report uses the saved price history in {csv_path}.'
+        rows = vd.load_yahoo(data, now) if data is not None else vd.read_csv(csv_path)
+        check_rows(rows, now)
+        last_date, last_price, last_adj = rows[-1]
+        k = last_price / last_adj          # adjusted prices in today's NAV dollars (k is 1.0 unless the last bar is odd)
+        bars = [(d, a * k) for d, _, a in rows]
+        nxt = next_trading_day(last_date)
+        rows_fit = [dict(window=name, **fit_window(bars, last_date, last_price, days, nxt)) for name, days in WINDOWS]
+        md, page, summary = build_reports(rows_fit, last_date, last_price, nxt, datetime.datetime.now().astimezone(), note)
+    except (DataError, OSError, ValueError, json.JSONDecodeError) as e:
+        print(f'vfinx-trend: {e}', file=sys.stderr)
+        if args.notify:
+            notify('VFINX report failed', str(e), urgent=True)
+        sys.exit(1)
+
+    os.makedirs(out, exist_ok=True)
+    if fresh:
+        vd.write_csv(csv_path, rows)    # the full history, ready for other uses and as the fallback
+    md_path, html_path = os.path.join(out, f'{last_date}.md'), os.path.join(out, f'{last_date}.html')
+    with open(md_path, 'w') as f:
+        f.write(md)
+    with open(html_path, 'w') as f:
+        f.write(page)
+    shutil.copyfile(html_path, os.path.join(out, 'latest.html'))
+    print(md)
+    print(f'\nWritten: {md_path}, {html_path}, {os.path.join(out, "latest.html")}')
+    if args.notify:
+        notify(f'VFINX vs trend - {last_date:%b %d}', (note + ' ' if note else '') + summary, html_path)
+
+
+if __name__ == '__main__':
+    main()

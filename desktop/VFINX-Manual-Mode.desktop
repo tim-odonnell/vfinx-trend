@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=VFINX Report - Manual Mode
+Comment=Stop automatic VFINX reports (Run Now still works)
+Exec=/home/user/.local/bin/vfinx-mode manual
+Icon=media-playback-pause
+Terminal=false
+Categories=Utility;

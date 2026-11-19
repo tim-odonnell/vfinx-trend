@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=VFINX Report - Run Now
+Comment=Make today's VFINX vs trend report now
+Exec=/home/user/.local/bin/vfinx-run-now
+Icon=x-office-spreadsheet
+Terminal=false
+Categories=Utility;
