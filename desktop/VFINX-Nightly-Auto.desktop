@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=VFINX Report - Nightly Auto
-Comment=Make the VFINX report automatically every weekday at 06:35
+Comment=Make the VFINX report automatically every weekday at 02:12
 Exec=/home/user/.local/bin/vfinx-mode nightly
 Icon=appointment-soon
 Terminal=false
