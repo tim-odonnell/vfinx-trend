@@ -18,7 +18,7 @@ Daily report: is **VFINX** (Vanguard 500 Index Fund Investor Shares) **above or 
 | Command / icon | What it does |
 |---|---|
 | `vfinx-run-now` / **VFINX Report - Run Now** | make the report now |
-| `vfinx-mode nightly` / **VFINX Report - Nightly Auto** | run automatically Mon-Fri 06:35 (a missed run is made at next boot) |
+| `vfinx-mode nightly` / **VFINX Report - Nightly Auto** | run automatically Mon-Fri 02:12 (a missed run is made at next boot) |
 | `vfinx-mode manual` / **VFINX Report - Manual Mode** | no automatic runs (the default after install) |
 | `vfinx-mode status` | mode, next run, last run, newest report |
 | `vfinx-trend --json FILE --now 2026-11-19T07:00 --out DIR` | offline test run |

@@ -15,7 +15,7 @@ case "${1:-}" in
         systemctl --user enable --now vfinx-report.timer
         echo nightly > "$MODE_FILE"
         next=$(systemctl --user show vfinx-report.timer -p NextElapseUSecRealtime --value)
-        notify-send -a "VFINX trend" -i appointment-soon "VFINX report: NIGHTLY mode" "Runs automatically Mon-Fri at 06:35. Next: ${next:-?}"
+        notify-send -a "VFINX trend" -i appointment-soon "VFINX report: NIGHTLY mode" "Runs automatically Mon-Fri at 02:12. Next: ${next:-?}"
         ;;
     status)
         echo "Mode: $(cat "$MODE_FILE" 2>/dev/null || echo 'not set (manual)')"
