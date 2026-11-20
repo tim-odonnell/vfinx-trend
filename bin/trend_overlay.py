@@ -2,7 +2,8 @@
 
 Written by a local Gemma E2B (Google official q4_0) in 9 guided steps, checked by Claude: 94 tests pass and the output is
 identical to Claude's reference (~/e2b-abilities/tasks/06b-trend-overlay-steps). overlay_svg(prices, trends, last_date,
-last_price, next_day, years) - prices = [(date, price)], trends = [{name, start, a, b, r2}] with price = exp(a + b*days since start)."""
+last_price, next_day, years) - prices = [(date, price)], trends = [{name, start, a, b, r2}] with price = exp(a + b*days since start).
+A trend with special=True gets the extra class 'avg' on its line and label (the amber all-history trend; Claude, 2026-11-20)."""
 import datetime
 import math
 
@@ -168,7 +169,8 @@ def line_parts(trends, ends, last_date, last_price, d1, d2, lo, hi):
         x2 = x_of(d2, d1, d2)
         y2 = y_of(p2, lo, hi)
         
-        line_string = f'<line x1="{x_of(sd, d1, d2):.1f}" y1="{y_of(p1, lo, hi):.1f}" x2="{x_of(d2, d1, d2):.1f}" y2="{y_of(p2, lo, hi):.1f}" class="ghost {cls}" style="opacity:{op:.2f}"/>'
+        extra = ' avg' if t.get('special') else ''   # Claude 2026-11-20: the amber all-history line
+        line_string = f'<line x1="{x_of(sd, d1, d2):.1f}" y1="{y_of(p1, lo, hi):.1f}" x2="{x_of(d2, d1, d2):.1f}" y2="{y_of(p2, lo, hi):.1f}" class="ghost {cls}{extra}" style="opacity:{op:.2f}"/>'
         lines.append(line_string)
         
     return lines
@@ -194,7 +196,7 @@ def label_parts(trends, ends, lo, hi):
         # The y position is the placed position for this trend, plus a small offset (3)
         text_y = placed[i] + 3
         
-        label_text = f'<text x="{W - R + 4}" y="{text_y:.1f}" class="tk lbl" style="opacity:{max(op, 0.45):.2f}">{t["name"]}</text>'
+        label_text = f'<text x="{W - R + 4}" y="{text_y:.1f}" class="tk lbl{' avg' if t.get('special') else ''}" style="opacity:{max(op, 0.45):.2f}">{t["name"]}</text>'
         
         labels.append(label_text)
         

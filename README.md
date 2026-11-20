@@ -12,6 +12,8 @@ Daily report: is **VFINX** (Vanguard 500 Index Fund Investor Shares) **above or 
   followed the line - near 0 means that window has no real trend.
 - Chart: under the dots and bars, the last 5 years of price with every trend line drawn faintly behind it (`bin/trend_overlay.py`,
   written by a local Gemma E2B in 9 guided steps and checked against a reference - see ~/e2b-abilities task 6b). On phones it opens at today; swipe for earlier years.
+- All-history trend (amber line in the chart, last table row, one sentence in the summary): the same fit over the whole
+  history, refitted every night - how far the price is above or below its long-run path.
 - Output: `~/VFINX-Reports/<last close date>.html` + `.md`, `latest.html`; desktop pop-up with "Open report".
   Takes ~2 s; no AI model involved (numbers are computed, never written by a model).
 
