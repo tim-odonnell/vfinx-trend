@@ -1,0 +1,311 @@
+# The Median Line License (MLL) — Draft v0.3
+
+*A trust-based software license that is free until you are doing better than
+half of your neighbors, and asks for a fair share only of what the software
+actually helped you earn — never enough to pull you back below the line.*
+
+---
+
+## Preamble — read this first
+
+Most software licensing makes you choose: give your work away to everyone
+(including people who will profit enormously from it and return nothing), or
+charge everyone (including people who cannot afford it and needed it most).
+
+This license refuses that choice. Its principle is simple:
+
+> **Use this software freely while you are getting started. Once it has
+> genuinely helped you rise above the median income of the place you live,
+> contribute a small share of what it helped you earn — and never so much
+> that paying would pull you back below that line.**
+
+The median is the heart of the design. It is local, so a licensee in rural
+Mississippi and a licensee in Manhattan are each measured against their own
+neighbors, not against a single national number. And it moves with the
+economy — in hard times the line falls and more people qualify for free use;
+in good times it rises with everyone's fortunes. The license scales itself.
+
+**This is a draft, and it is honest about being one.** It has not yet been
+reviewed by an attorney (Appendix A lists the questions such review should
+answer). It has no audits, no reporting requirements, no enforcement
+machinery. It runs on the good faith of the people who use the software —
+deliberately. If you are the kind of person who would cheat an honor-system
+license, no contract language was ever going to stop you anyway. If you are
+the kind of person who wouldn't, welcome.
+
+The license **text itself** is dedicated to the public domain (Section 13)
+so that any developer, lawyer, or economist can adopt it, harden it, and
+improve it. If this idea is good, it should outgrow any single project.
+
+---
+
+## Parameters
+
+This license is a reusable template. Each project that adopts it fills in
+this block. For **this** project:
+
+| Parameter | Value |
+|---|---|
+| **The Work** | VFINX vs Trend (vfinx-trend) (source code, documentation, scripts, and assets in this repository) |
+| **Licensor** | Tim O'Donnell, and their successors and assigns |
+| **Copyright** | Copyright © 2026 Tim O'Donnell. All rights not expressly granted here are reserved. |
+| **Contact** | https://timodonnell.info |
+| **Contribution Rate** | 2% of Covered Revenue |
+| **Safeguard Cap** | 10% of Excess Income |
+| **De Minimis** | Obligations under $25 in a year are waived |
+| **Median Data Source** | U.S. Census Bureau, ACS 5-Year Estimates, Table B19013 (median household income), ZCTA level |
+| **Governing Law** | [To be set on advice of counsel — see Appendix A] |
+
+---
+
+## 1. Definitions
+
+**"Work"** — the software identified in the Parameters block.
+
+**"You"** — any individual or entity exercising rights under this license.
+
+**"Contribution Year"** — a calendar year, or, if you file taxes on a
+different fiscal year, that fiscal year. All tests and obligations in this
+license are computed independently for each Contribution Year.
+
+**"Your Return"** — your federal income tax return for the Contribution
+Year. For an entity, "Your Return" means the return of the natural person
+holding the largest ownership interest in the entity. If ownership is so
+dispersed that no natural person holds at least a 20% interest, the entity
+is deemed Above the Line (Section 3) for every Contribution Year, and the
+Safeguard Cap does not apply to it.
+
+**"Your Income"** — the adjusted gross income (AGI) reported on Your
+Return. If you were not required to file a return for the Contribution
+Year, Your Income is deemed below the Local Median.
+
+**"Your Zipcode"** — the ZIP code of the residence address cited on Your
+Return for the Contribution Year. Because it comes from each year's return,
+it updates automatically when you move.
+
+**"Local Median"** — the median household income for Your Zipcode, from the
+most recent edition of the Median Data Source published as of the last day
+of the Contribution Year. If the figure for Your Zipcode is unpublished or
+suppressed, use the median household income of the county containing your
+residence instead. If the Median Data Source is discontinued, use the most
+comparable successor dataset, chosen in good faith.
+
+*Outside the United States:* substitute your country's equivalent annual
+income filing for Your Return, and your country's national median household
+income (from your national statistics agency, or the World Bank) for the
+Local Median, converting currency at the Contribution Year's average
+exchange rate. This is the roughest part of this draft; resolve all
+ambiguity in your own favor (Section 7).
+
+**"Excess Income"** — Your Income minus the Local Median, if positive;
+otherwise zero.
+
+**"Covered Revenue"** — gross revenue you received during the Contribution
+Year that is attributable to the Work: revenue from selling or licensing
+outputs created with the Work, from services performed using the Work, or
+from products in which the Work or its outputs are a component. Where the
+Work was one of several tools that contributed, estimate its share in good
+faith. Money the Work did not help you earn is not Covered Revenue.
+
+## 2. Grant of License
+
+Subject to the conditions of this license, the Licensor grants you a
+worldwide, non-exclusive license to use, copy, modify, merge, publish, and
+distribute the Work, including commercially. Below the Line (Section 3)
+this grant is royalty-free; Above the Line it is conditioned on the
+Contribution in Section 4.
+
+The Licensor additionally grants you a license under any patent claims the
+Licensor holds that are necessarily infringed by the Work as provided, on
+the same terms. No trademark rights are granted; you may not use the
+Licensor's names or marks except to accurately describe the Work's origin.
+
+Any copy or substantial portion of the Work you distribute must retain this
+license, including the Parameters block, unmodified. Derivative works of
+the Work must be distributed under this same license with the original
+Parameters intact; you may additionally license **your own original
+contributions** to a derivative under this license with your own Parameters
+block, in which case the stacking rule in Section 5 governs the combined
+obligation.
+
+## 3. The Threshold Test — "the Line"
+
+For each Contribution Year, exactly one of the following is true:
+
+- **Below the Line** — Your Income ≤ Local Median. You owe **nothing** for
+  that year, regardless of how much Covered Revenue you earned. Your use is
+  royalty-free, fully licensed, and welcome.
+- **Above the Line** — Your Income > Local Median. Section 4 applies.
+
+The test repeats every year. Crossing the Line one year does not obligate
+you in a later year when you are below it again.
+
+## 4. The Contribution
+
+If you are Above the Line for a Contribution Year, you owe the Licensor
+the **lesser** of:
+
+1. **Contribution Rate × Covered Revenue** for that year, and
+2. **Safeguard Cap × Excess Income** for that year.
+
+If the result is less than the De Minimis amount, it is waived.
+
+Two consequences of this formula, stated plainly because they are the
+point:
+
+- **You can never be pulled below the Line by paying.** Your payment is
+  capped at a fraction of the amount by which you exceed your local median,
+  so paying it always leaves you above the median. The obligation phases in
+  smoothly from zero — there is no cliff at the threshold, and growth is
+  never punished.
+- **If the Work earned you nothing, you owe nothing** — no matter how
+  wealthy you are. Covered Revenue of zero means a contribution of zero.
+  This is a royalty on benefit received, not a tax on existing.
+
+### Worked examples (Rate 2%, Cap 10%)
+
+*Example A — below the Line.* Local Median $68,400; Your Income $52,000.
+You owe **$0**, even if the Work generated $200,000 in gross revenue for
+you. (If you're netting $52,000 on that gross, you're not who this license
+asks to pay.)
+
+*Example B — just above the Line.* Local Median $68,400; Your Income
+$79,000 → Excess Income $10,600. Covered Revenue $85,000.
+Rate: 2% × $85,000 = $1,700. Cap: 10% × $10,600 = $1,060.
+You owe the lesser: **$1,060** — and you remain comfortably above the
+median after paying.
+
+*Example C — well above the Line.* Local Median $68,400; Your Income
+$310,000 → Excess Income $241,600. Covered Revenue $150,000.
+Rate: 2% × $150,000 = $3,000. Cap: 10% × $241,600 = $24,160.
+You owe **$3,000** — about 1% of your total income.
+
+### Looking up your Local Median
+
+Visit data.census.gov, search for table **B19013**, filter geography to
+**ZCTA5** and enter your ZIP code. The most recent 5-Year Estimate is the
+figure to use. It takes about two minutes, once a year, and only if you
+think you might be Above the Line.
+
+## 5. Payment, timing, and privacy
+
+- Compute your contribution after filing Your Return; payment is due within
+  90 days of filing, per instructions published at the Contact in the
+  Parameters block.
+- **You disclose nothing.** No tax returns, no income figures, no revenue
+  reports. You self-assess and you pay a number. The Licensor never learns
+  your income unless you choose to share it. A trust-based license should
+  not demand the very privacy invasion that formal licenses use audits for.
+- **If the Licensor cannot be paid** — no payment instructions are
+  published, the Contact is dead, and reasonable effort finds no successor —
+  you may satisfy the obligation by donating the amount to a registered
+  charity of your choice, or, failing that, it is waived for that year.
+  Software must not become a debt to a ghost.
+- **Stacking.** If multiple works you use are licensed under Median Line
+  License terms, your combined obligations under all of them for a
+  Contribution Year are capped at the Safeguard Cap applied once, allocated
+  pro-rata among licensors by their uncapped amounts. Adopting this license
+  means accepting this rule — the ecosystem must never collectively drag a
+  builder below the Line either.
+
+## 6. Hardship
+
+If paying would cause you genuine hardship the formula failed to
+anticipate — a medical year, a disaster, a collapse after the tax year
+closed — write to the Licensor and say so. The presumption is that the
+waiver is granted. The formula serves the principle, not the other way
+around.
+
+## 7. Rule of Lenity
+
+Every ambiguity in this license — in attribution of Covered Revenue, in
+data-source edge cases, in non-U.S. application, in anything — is resolved
+**in your favor**. A good-faith reading that benefits you is the correct
+reading. This license would rather collect less than ever collect unjustly.
+
+## 8. Good faith and termination
+
+This license is enforced by trust, and trust is the intended mechanism.
+However, the Licensor may terminate this license for a specific licensee
+who is knowingly and materially evading a contribution they know to be
+owed. Termination requires written notice describing the evasion and a
+60-day opportunity to cure; payment or a good-faith dispute within that
+period cures it. Termination is discretionary, is a last resort, and
+requires actual bad faith — honest mistakes, good-faith estimates that turn
+out low, and hardship are never grounds for termination.
+
+## 9. Severability
+
+If any provision of this license is held unenforceable, the remainder
+stands. If the Contribution mechanism itself (Sections 3–5) is held
+unenforceable in your jurisdiction, the license grant in Section 2
+**survives, royalty-free**. The author of this license would rather give
+the Work away than have a court turn it into something that takes from
+people it promised not to take from.
+
+## 10. No Warranty
+
+THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING
+FROM THE WORK OR ITS USE.
+
+## 11. Versioning
+
+The Licensor may publish future versions of this license. You may continue
+under the version you received the Work under, or adopt any later version,
+at your option.
+
+## 12. For developers who want to use this license
+
+Copy this document. Replace the Parameters block with your own project,
+contact, and chosen Rate/Cap. Keep the structure: the annual Threshold
+Test, the two-part lesser-of formula, the Rule of Lenity, the stacking
+rule, and the hardship clause are what make it fair — the numbers are
+yours to tune. If you harden it with real legal review, publish your
+version openly so others can benefit.
+
+## 13. Dedication of this license text
+
+The text of this license (as distinct from the Work it covers) is dedicated
+to the public domain under CC0 1.0 Universal
+(creativecommons.org/publicdomain/zero/1.0). Anyone may reproduce, adapt,
+and build upon it, for any purpose, without permission.
+
+---
+
+## Appendix A — Open questions for legal review
+
+This appendix is not part of the license terms. It is the standing brief
+for the attorneys who review this draft, so their time goes to the real
+questions:
+
+1. **Governing law and venue** — unset; choose and add to Parameters.
+2. **Characterization of the Contribution** — royalty on IP, contractual
+   debt, or something else? Tax treatment for both parties follows from
+   this.
+3. **Enforceability of the trust-based structure** — is there adequate
+   consideration and definiteness? Does the Rule of Lenity (Section 7)
+   undermine enforceability against actual bad actors, and if so, is that
+   trade-off acceptable to the Licensor? (Drafting intent: yes.)
+4. **Entity attribution and aggregation** — the largest-interest rule in
+   "Your Return" is a sketch. Does it need affiliate-aggregation rules to
+   prevent splitting revenue across entities or household members to stay
+   Below the Line?
+5. **Non-U.S. mechanics** — the national-median substitution is crude.
+   Jurisdictions to prioritize, and whether the license should simply offer
+   a flat threshold outside the U.S.
+6. **Succession** — does the payment obligation survive assignment of the
+   copyright, the Licensor's death, or bankruptcy of either party? The
+   ghost-clause in Section 5 states the intent; make it operative.
+7. **Patent and trademark language** (Section 2) — one sentence each;
+   confirm sufficiency or replace with standard clauses.
+8. **Derivative-works parameters** (Section 2) — the dual-Parameters model
+   for contributors is novel; check it composes cleanly with the stacking
+   rule over long chains of derivatives.
+
+---
+
+*The Median Line License, Draft v0.3 — not legal advice, not yet
+attorney-reviewed, published in good faith and open to refinement.*
